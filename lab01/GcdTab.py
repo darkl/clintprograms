@@ -20,7 +20,7 @@ def generate_table(x_center, y_center, width, height):
         for x in range(x_min, x_max + 1):
             result = gcd(x, y)
             current_row.append(result)
-        table_content.append(current_row)
+        table_content.insert(0, current_row)
 
     return headers, table_content
 
