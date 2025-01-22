@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-def euclidean_algorithm(a: int, b: int) -> List[Tuple[int, int, int, int, int]]:
+def euclidean_algorithm(a: int, b: int, optimization: bool) -> List[Tuple[int, int, int, int, int]]:
     result: List[Tuple[int, int, int, int, int]] = []
 
     previous_linear: Tuple[int, int] = (1, 0)
@@ -14,10 +14,8 @@ def euclidean_algorithm(a: int, b: int) -> List[Tuple[int, int, int, int, int]]:
         b = -b
 
     if a < b:
-        temp_linear = previous_linear
-        a, b = b, a
-        previous_linear = current_linear
-        current_linear = temp_linear
+        a, b = b, a  # Swap `a` and `b`
+        previous_linear, current_linear = current_linear, previous_linear
 
     big = a
     small = b
@@ -25,8 +23,16 @@ def euclidean_algorithm(a: int, b: int) -> List[Tuple[int, int, int, int, int]]:
     while small > 0:
         r = big % small
         q = big // small
+
+        modified_integer = False
+        if optimization and r > small // 2:
+            q += 1
+            r -= small
+            modified_integer = True
+
         big = small
         small = r
+
         result.append((big, q, r, current_linear[0], current_linear[1]))
 
         new_linear = (
@@ -34,11 +40,14 @@ def euclidean_algorithm(a: int, b: int) -> List[Tuple[int, int, int, int, int]]:
             previous_linear[1] - q * current_linear[1]
         )
 
+        if modified_integer:
+            small = -r
+            new_linear = (-new_linear[0], -new_linear[1])
+
         previous_linear = current_linear
         current_linear = new_linear
 
     return result
-
 
 def main():
     a = int(input("Enter a: "))
@@ -52,7 +61,7 @@ def main():
     print(description)
 
     # Call the Euclidean algorithm function
-    table_values = euclidean_algorithm(a, b)
+    table_values = euclidean_algorithm(a, b, False)
     index = 1
 
     for value in table_values:
