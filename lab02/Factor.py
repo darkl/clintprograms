@@ -29,7 +29,6 @@ def factor(n: int) -> List[int]:
         n = remove_factors(n, result, prime)
 
     d = 0
-    is_prime = True
 
     # Trial division with selected forms of d
     square_root = isqrt(n)
@@ -40,7 +39,6 @@ def factor(n: int) -> List[int]:
             current_divisor = d + current_residue
 
             if current_divisor != 1 and n % current_divisor == 0:
-                is_prime = False
                 n = remove_factors(n, result, current_divisor)
 
         d += 30  # Move to the next set of forms
