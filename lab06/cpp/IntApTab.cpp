@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 #include <map>
-#include <numeric>
 #include <cmath>
 #include <iomanip>
 
