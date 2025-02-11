@@ -7,9 +7,6 @@ def gcd(a: int, b: int) -> int:
         a, b = b, a % b
     return a
 
-def power(base: int, exp: int) -> int:
-    return base ** exp
-
 def inverse(a: int, n: int) -> int:
     _, y = euclidean_algorithm(n, a % n)
     return y
@@ -43,9 +40,9 @@ def chinese_value(a: int, b: int, r1: int, r2: int) -> int | None:
             a_exponent = factorization_of_a[prime]
             b_exponent = factorization_of_b[prime]
             if a_exponent < b_exponent:
-                a_prime //= power(prime, a_exponent)
+                a_prime //= prime ** a_exponent
             else:
-                b_prime //= power(prime, b_exponent)
+                b_prime //= prime ** b_exponent
     
     first_coefficient = inverse(b_prime, a_prime)
     second_coefficient = inverse(a_prime, b_prime)
