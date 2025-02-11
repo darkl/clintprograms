@@ -4,7 +4,6 @@
 #include <numeric>
 #include <cmath>
 #include <iomanip>
-#include <memory>
 
 using namespace std;
 
@@ -189,13 +188,6 @@ int main() {
 
     auto [headers, table] = generate_table(a, b, start_x, start_y, width, height);
     print_table(headers, table);
-
-    // Clean up dynamically allocated memory
-    for (auto& row : table) {
-        for (auto& cell : row) {
-            delete cell; // Free each allocated integer
-        }
-    }
 
     return 0;
 }
