@@ -224,7 +224,7 @@ def main():
         power_to_lift = int(input("Enter maximal power to lift: "))
         lifted = solution_to_lift
         
-        lifted = hensel_lift_regular(parsed_polynomial, lifted, n, power_to_lift)
+        lifted = hensel_lift_regular(parsed_polynomial, lifted, n, power_to_lift+1)
         for i,lift in enumerate(lifted[1:]):
             print(f"The lifted solution is x ≡ {lift[1]} (mod {n}^{i+2}).")
 
