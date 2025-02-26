@@ -8,6 +8,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <regex>
+#include <boost/multiprecision/cpp_int.hpp>
 
 using namespace std;
 
@@ -57,10 +58,10 @@ string polynomial_to_string(const map<int, int>& polynomial) {
     return result;
 }
 
-using bigint = long long;
+using BigInteger = boost::multiprecision::cpp_int;
 
-bigint powerMod(bigint baseValue, int exponent, bigint modulo) {
-    bigint result = 1;
+BigInteger powerMod(BigInteger baseValue, int exponent, BigInteger modulo) {
+    BigInteger result = 1;
     baseValue = baseValue % modulo;
 
     while (exponent > 0) {
@@ -73,22 +74,22 @@ bigint powerMod(bigint baseValue, int exponent, bigint modulo) {
     return result;
 }
 
-bigint EvaluatePolynomial(const map<int, int>& polynomial, bigint x, bigint n) {
-    bigint result = 0;
+BigInteger EvaluatePolynomial(const map<int, int>& polynomial, BigInteger x, BigInteger n) {
+    BigInteger result = 0;
     auto it = polynomial.rbegin();
     int lastPower = it->first;
 
     for (auto it = polynomial.rbegin(); it != polynomial.rend(); ++it) {
         int currentPower = it->first;
         int coefficient = it->second;
-        bigint difference = lastPower - currentPower;
-        bigint powerForDifference = powerMod(x, difference, n);
+        int difference = lastPower - currentPower;
+        BigInteger powerForDifference = powerMod(x, difference, n);
         result = (result * powerForDifference) % n;
         result = (result + coefficient) % n;
         lastPower = currentPower;
     }
     if (lastPower != 0) {
-        bigint powerForLast = powerMod(x, lastPower, n);
+        BigInteger powerForLast = powerMod(x, lastPower, n);
         result = (result * powerForLast) % n;
     }
     return result;
@@ -122,7 +123,7 @@ vector<pair<int, string>> FindSolutionsWithType(const map<int, int>& polynomial,
     vector<int> solutions = FindSolutions(polynomial, n);
 
     for (int solution : solutions) {
-        bigint derivativeAtSolution = EvaluatePolynomial(derivative, solution, n);
+        BigInteger derivativeAtSolution = EvaluatePolynomial(derivative, solution, n);
         if (derivativeAtSolution == 0) {
             result.emplace_back(solution, "singular");
         } else {
@@ -132,9 +133,9 @@ vector<pair<int, string>> FindSolutionsWithType(const map<int, int>& polynomial,
     return result;
 }
 
-pair<bigint, bigint> euclideanAlgorithm(bigint a, bigint b) {
-    vector<tuple<bigint, bigint, bigint, bigint, bigint>> result;
-    pair<bigint, bigint> previousLinear = {1, 0}, currentLinear = {0, 1};
+pair<BigInteger, BigInteger> euclideanAlgorithm(BigInteger a, BigInteger b) {
+    vector<tuple<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger>> result;
+    pair<BigInteger, BigInteger> previousLinear = {1, 0}, currentLinear = {0, 1};
 
     if (a < 0) {
         previousLinear = {-1, 0};
@@ -146,14 +147,14 @@ pair<bigint, bigint> euclideanAlgorithm(bigint a, bigint b) {
     }
     if (a < b) swap(a, b), swap(previousLinear, currentLinear);
 
-    bigint big = a, small = b;
+    BigInteger big = a, small = b;
     while (small > 0) {
-        bigint r = big % small;
-        bigint q = big / small;
+        BigInteger r = big % small;
+        BigInteger q = big / small;
         big = small;
         small = r;
 
-        pair<bigint, bigint> newLinear = {previousLinear.first - q * currentLinear.first,
+        pair<BigInteger, BigInteger> newLinear = {previousLinear.first - q * currentLinear.first,
                                   previousLinear.second - q * currentLinear.second};
         previousLinear = currentLinear;
         currentLinear = newLinear;
@@ -163,36 +164,36 @@ pair<bigint, bigint> euclideanAlgorithm(bigint a, bigint b) {
 }
 
 
-bigint inverse(bigint a, bigint n) {
+BigInteger inverse(BigInteger a, BigInteger n) {
     if (n == 1) return 1;
     auto result = euclideanAlgorithm(n, a % n);
     return result.second;
 }
 
-vector<pair<bigint, bigint>> henselLiftRegular(map<int, int>& polynomial, int solution, bigint p, int maxPower) {
+vector<pair<BigInteger, BigInteger>> henselLiftRegular(map<int, int>& polynomial, int solution, BigInteger p, int maxPower) {
     if (EvaluatePolynomial(polynomial, solution, p) != 0) {
         throw runtime_error("Expected solution to be a root of the polynomial modulo p.");
     }
 
     map<int, int> derivative = polynomialDerivative(polynomial);
-    bigint derivativeValue = EvaluatePolynomial(derivative, solution, p);
+    BigInteger derivativeValue = EvaluatePolynomial(derivative, solution, p);
 
     if (derivativeValue == 0) {
         throw runtime_error("Expected solution not to be a root of the derivative of the polynomial modulo p.");
     }
 
-    bigint inverseDerivativeValueModp = inverse(derivativeValue, p);
+    BigInteger inverseDerivativeValueModp = inverse(derivativeValue, p);
 
-    vector<pair<bigint, bigint>> result;
-    bigint currentLifted = solution;
-    bigint previousPower = 1;
+    vector<pair<BigInteger, BigInteger>> result;
+    BigInteger currentLifted = solution;
+    BigInteger previousPower = 1;
 
     for (int i = 1; i < maxPower; i++) {
-        bigint currentPower = previousPower * p;
-        bigint currentValue = EvaluatePolynomial(polynomial, currentLifted, currentPower);
-        bigint multiple = currentValue / previousPower;
+        BigInteger currentPower = previousPower * p;
+        BigInteger currentValue = EvaluatePolynomial(polynomial, currentLifted, currentPower);
+        BigInteger multiple = currentValue / previousPower;
 
-        bigint currentC = ((-inverseDerivativeValueModp * multiple) % p + p) % p;
+        BigInteger currentC = ((-inverseDerivativeValueModp * multiple) % p + p) % p;
         currentLifted = currentLifted + currentC * previousPower;
         result.emplace_back(currentC, currentLifted);
         previousPower = currentPower;
@@ -201,29 +202,29 @@ vector<pair<bigint, bigint>> henselLiftRegular(map<int, int>& polynomial, int so
     return result;
 }
 
-vector<pair<bigint, bigint>> allHenselSingularLifts(map<int, int>& polynomial, int solution, bigint p, int currentPower) {
+vector<pair<BigInteger, BigInteger>> allHenselSingularLifts(map<int, int>& polynomial, int solution, BigInteger p, int currentPower) {
     if (EvaluatePolynomial(polynomial, solution, p) != 0) {
         throw runtime_error("Expected solution to be a root of the polynomial modulo p.");
     }
 
     map<int, int> derivative = polynomialDerivative(polynomial);
-    bigint derivativeValue = EvaluatePolynomial(derivative, solution, p);
+    BigInteger derivativeValue = EvaluatePolynomial(derivative, solution, p);
 
     if (derivativeValue != 0) {
         throw runtime_error("Expected solution to be a root of the derivative of the polynomial modulo p.");
     }
 
-    vector<pair<bigint, bigint>> result;
-    bigint previousPower = 1;
+    vector<pair<BigInteger, BigInteger>> result;
+    BigInteger previousPower = 1;
     for (int i = 1; i < currentPower; i++) {
         previousPower *= p;
     }
-    bigint powerValue = previousPower * p;
-    bigint evaluation = EvaluatePolynomial(polynomial, solution, powerValue);
+    BigInteger powerValue = previousPower * p;
+    BigInteger evaluation = EvaluatePolynomial(polynomial, solution, powerValue);
 
     if (evaluation == 0) {
         for (int i = 0; i < p; i++) {
-            bigint currentSolution = solution + previousPower * i;
+            BigInteger currentSolution = solution + previousPower * i;
             result.emplace_back(i, currentSolution);
         }
     }
@@ -231,7 +232,7 @@ vector<pair<bigint, bigint>> allHenselSingularLifts(map<int, int>& polynomial, i
     return result;
 }
 
-bool isRegular(map<int, int>& polynomial, int solution, bigint p) {
+bool isRegular(map<int, int>& polynomial, int solution, BigInteger p) {
     map<int, int> derivative = polynomialDerivative(polynomial);
     return EvaluatePolynomial(derivative, solution, p) != 0;
 }
@@ -289,7 +290,7 @@ int main() {
         std::cout << "Enter maximal power to lift: ";
         std::cin >> power_to_lift;
         
-        std::vector<std::pair<bigint, bigint>> lifted = henselLiftRegular(parsed_polynomial, solution_to_lift, n, power_to_lift + 1);
+        std::vector<std::pair<BigInteger, BigInteger>> lifted = henselLiftRegular(parsed_polynomial, solution_to_lift, n, power_to_lift + 1);
         
         for (size_t i = 1; i < lifted.size(); ++i) {
             std::cout << "The lifted solution is x ≡ " << lifted[i].second << " (mod " << n << "^" << (i+1) << ").\n";
